@@ -1,5 +1,5 @@
 # Add C source files here.
-add_executable(lab1 
+add_executable(lab1
     Src/lab1.c
     Src/hal_gpio.c
     Src/stm32f0xx_hal_msp.c
@@ -22,3 +22,5 @@ target_compile_definitions(lab1 PRIVATE
 target_link_libraries(lab1
     STM32_Drivers
 )
+
+flash_target(lab1)

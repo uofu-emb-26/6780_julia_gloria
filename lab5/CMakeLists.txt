@@ -1,5 +1,5 @@
 # Add C source files here.
-add_executable(lab5 
+add_executable(lab5
     Src/lab5.c
     Src/stm32f0xx_hal_msp.c
     Src/stm32f0xx_it.c
@@ -21,3 +21,5 @@ target_compile_definitions(lab5 PRIVATE
 target_link_libraries(lab5
     STM32_Drivers
 )
+
+flash_target(lab5)

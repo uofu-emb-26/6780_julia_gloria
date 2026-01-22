@@ -1,5 +1,5 @@
 # Add C source files here.
-add_executable(lab2 
+add_executable(lab2
     Src/lab2.c
     Src/stm32f0xx_hal_msp.c
     Src/stm32f0xx_it.c
@@ -21,3 +21,5 @@ target_compile_definitions(lab2 PRIVATE
 target_link_libraries(lab2
     STM32_Drivers
 )
+
+flash_target(lab2)
