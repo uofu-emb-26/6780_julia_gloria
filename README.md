@@ -1,39 +1,14 @@
-This is a project template for ECE 5780, Embedded Systems.
+# Overview
 
-# Installation
-## VSCode
-Download and install Visual Studio Code.
+This is my repository for ECE6780 - Embedded Systems.
 
-https://code.visualstudio.com/
+This class pertains to developing, designing, and fabricating embedded systems. This utilizes the STM32F072 Discovery Board to program the STM32F0x microcontroller. 
 
-Install these extensions
+# Labs
 
-https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack
+My labs are contained in the Lab-Reports folder. Each lab will be contained in its own folder and has its own pre-lab folder and post-lab folder, along with any of the necessary files for each lab.
 
-https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide
-
-## Git
-
-If you are on Windows, install git
-
-https://git-scm.com/downloads
-
-Linux and MacOS users should already have git installed through their OS.
-
-# Installation instructions for remote development or system wide installation.
-**Note that NoMachine USB forwarding has been found to be too unstable. These instructions are still relevant if you wish to install the toolchain outside of platformio.**.
-## Local machine
-Download and install Visual Studio Code.
-
-https://code.visualstudio.com/
-
-Some additional instructions for WSL on Windows.
-
-https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode
-
-Windows users will need to install PuTTY
-
-https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html
+# Template Information
 
 ## Unix installation
 Students are required to work in a Unix environment for this course.
@@ -52,7 +27,6 @@ brew install cask gcc-arm-embedded
 brew install openocd
 brew install stlink
 ```
-
 
 ### WSL
 The Windows Subsystem for Linux (WSL) allows installation of a Linux environment inside of Windows.
