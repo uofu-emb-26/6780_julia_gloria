@@ -36,7 +36,8 @@ int main(void) {
   // The offset for the output type is 0x04, so this memory address is 0x4800 0804.
   // &= used to clear by bitwise-AND operation on 0s.
 
-  GPIOC -> OTYPER &= ~(0x300);            // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
+  GPIOC -> OTYPER &= ~(0x300);              // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
+  assert((GPIOC -> OTYPER & 0x300) == 0);   // Checks GPIOC OT9 and OT8 are cleared
 
   // The offset for the output speed is 0x08, so this memory address is 0x4800 0808.
 
