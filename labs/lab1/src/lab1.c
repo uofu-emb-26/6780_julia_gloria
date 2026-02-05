@@ -46,7 +46,8 @@ int main(void) {
 
   // The offset for the pull-up pull-down resistors is 0x0C, so this memory address is 0x4800 080C.
 
-  GPIOC -> PUPDR &= ~(0xF0000);           // GPIOC PUPDR9 and PUPDR8 cleared to 00 for no pull-up, no pull-down configuration.
+  GPIOC -> PUPDR &= ~(0xF0000);               // GPIOC PUPDR9 and PUPDR8 cleared to 00 for no pull-up, no pull-down configuration.
+  assert((GPIOC -> PUPDR & 0xF0000) == 0);    // Checks GPIOC PUPDR9 and PUPDR8 are cleared to 00.
 
   // Initializes the specific GPIO peripheral of desired pins
   /*GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9,
