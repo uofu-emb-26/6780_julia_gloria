@@ -30,18 +30,19 @@ int main(void) {
   // The offset for input mode is 0x00, so no offset address is calculated.
   // ST provides header files for each offset (The following shows this shortcut).
 
-  GPIOC -> MODER |= 0x50000;                // GPIOC MODER9 and MODER8 set to 01 and 01 for general purpose output mode
-  assert(GPIOC -> MODER == 0x50000);        // Checks GPIOC MODER9 and MODER8
+  GPIOC -> MODER |= 0x50000;                  // GPIOC MODER9 and MODER8 set to 01 and 01 for general purpose output mode
+  assert(GPIOC -> MODER == 0x50000);          // Checks GPIOC MODER9 and MODER8
 
   // The offset for the output type is 0x04, so this memory address is 0x4800 0804.
   // &= used to clear by bitwise-AND operation on 0s.
 
-  GPIOC -> OTYPER &= ~(0x300);              // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
-  assert((GPIOC -> OTYPER & 0x300) == 0);   // Checks GPIOC OT9 and OT8 are cleared
+  GPIOC -> OTYPER &= ~(0x300);                // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
+  assert((GPIOC -> OTYPER & 0x300) == 0);     // Checks GPIOC OT9 and OT8 are cleared
 
   // The offset for the output speed is 0x08, so this memory address is 0x4800 0808.
 
-  GPIOC -> OSPEEDR &= ~(0x50000);         // GPIOC OSPEEDR9 and OSPEEDR8 cleared to x0 for low-speed output configuration.
+  GPIOC -> OSPEEDR &= ~(0x50000);             // GPIOC OSPEEDR9 and OSPEEDR8 cleared to x0 for low-speed output configuration.
+  assert((GPIOC -> OSPEEDR & 0x50000) == 0);  // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
 
   // The offset for the pull-up pull-down resistors is 0x0C, so this memory address is 0x4800 080C.
 
