@@ -72,6 +72,9 @@ int main(void) {
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
 
     GPIOC -> ODR ^= 0x300;                // GPIOC ODR9 and ODR8 inverted.
+
+    // Checks if GPIOC ODR9 XOR ODR8 are set.
+    assert((GPIOC -> ODR ^ 0x300) == 0x100 || (GPIOC -> ODR ^ 0x300) == 0x200);
   }
 }
 
