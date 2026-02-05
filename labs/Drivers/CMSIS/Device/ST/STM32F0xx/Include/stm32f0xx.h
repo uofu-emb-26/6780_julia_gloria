@@ -57,11 +57,7 @@
   * - IRQ channel definition
   * - Peripheral memory mapping and physical registers address definition
   * - Peripheral pointer declaration and driver header file inclusion
-<<<<<<< HEAD
   * - Product miscellaneous configuration: assert macros, ...
-=======
-  * - Product miscellaneous configuration: assert macros, …
->>>>>>> 0ce70a2e24a80aa6d84b73bea30c9c7ab3838518
   * Note: These CMSIS drivers (stm32f0xxxx.h) are always supporting features of the sub-family's superset.
   */
 

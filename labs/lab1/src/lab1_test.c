@@ -1,9 +1,8 @@
 #include "main.h"
-#include "assert.h"
 #include "stm32f072xb.h"
 #include "stm32f0xx_hal.h"
 
-void SystemClock_Config(void);
+/*void SystemClock_Config(void);
 
 /**
   * @brief  The application entry point.
@@ -11,19 +10,10 @@ void SystemClock_Config(void);
   */
 int main(void) {
   // Initializes the HAL library
-  HAL_Init();
+  HAL_Init();               
   
   // Initializes the system clock
-  SystemClock_Config();     
-
-  //RCC enables system clock to be used for GPIO clock
-  HAL_RCC_GPIOC_CLK_ENABLE();
-
-  GPIOC -> MODER &= (0x00000000);         // Clearing all GPIOC MODER registers
-  GPIOC -> OTYPER &= (0x0000);            // Clearing all GPIOC OTYPER registers
-  GPIOC -> OSPEEDR &= (0x00000000);       // Clearing all GPIOC OSPEEDR registers
-  GPIOC -> PUPDR &= (0x00000000);         // Clearing all GPIOC PUPDR registers
-  GPIOC -> ODR &= (0x0000);               // Clearing all GPIOC ODR registers
+  //SystemClock_Config();     
   
   // Instead of using the HAL library, we can program the direct memory address for each peripheral register.
   // The memory address for GPIOC is 0x4800 0800.
@@ -44,6 +34,9 @@ int main(void) {
   // The offset for the pull-up pull-down resistors is 0x0C, so this memory address is 0x4800 080C.
 
   GPIOC -> PUPDR &= ~(0xF0000);           // GPIOC PUPDR9 and PUPDR8 cleared to 00 for no pull-up, no pull-down configuration.
+
+  //RCC enables system clock to be used for GPIO clock
+  //__HAL_RCC_GPIOC_CLK_ENABLE();
 
   // Initializes the specific GPIO peripheral of desired pins
   /*GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9,
@@ -70,15 +63,11 @@ int main(void) {
   }
 }
 
-void HAL_RCC_GPIOC_CLK_ENABLE(void) {
-    RCC -> AHBENR |= RCC_AHBENR_GPIOCEN;
-}
-
-/**
+/*/**
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(void)
+/*void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -86,7 +75,7 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  /*RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
@@ -97,7 +86,7 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+  /*RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
@@ -107,20 +96,20 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
+}*/
 
-/**
+/*/**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
-void Error_Handler(void)
+/*void Error_Handler(void)
 {
   /* User can add their own implementation to report the HAL error return state */
-  __disable_irq();
+  /*__disable_irq();
   while (1)
   {
   }
-}
+}*/
 
 #ifdef USE_FULL_ASSERT
 /**

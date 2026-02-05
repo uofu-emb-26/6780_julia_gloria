@@ -631,13 +631,13 @@ typedef struct
                                         tmpreg = READ_BIT(RCC->AHBENR, RCC_AHBENR_GPIOBEN);\
                                         UNUSED(tmpreg); \
                                       } while(0U)
-#define __HAL_RCC_GPIOC_CLK_ENABLE()   do { \
+/*#define __HAL_RCC_GPIOC_CLK_ENABLE()   do { \
                                         __IO uint32_t tmpreg; \
                                         SET_BIT(RCC->AHBENR, RCC_AHBENR_GPIOCEN);\
-                                        /* Delay after an RCC peripheral clock enabling */\
+                                        // Delay after an RCC peripheral clock enabling \
                                         tmpreg = READ_BIT(RCC->AHBENR, RCC_AHBENR_GPIOCEN);\
                                         UNUSED(tmpreg); \
-                                      } while(0U)
+                                      } while(0U)*/
 #define __HAL_RCC_GPIOF_CLK_ENABLE()   do { \
                                         __IO uint32_t tmpreg; \
                                         SET_BIT(RCC->AHBENR, RCC_AHBENR_GPIOFEN);\
