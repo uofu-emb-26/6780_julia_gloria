@@ -30,7 +30,8 @@ int main(void) {
   // The offset for input mode is 0x00, so no offset address is calculated.
   // ST provides header files for each offset (The following shows this shortcut).
 
-  GPIOC -> MODER |= 0x50000;               // GPIOC MODER9 and MODER8 set to 01 and 01 for general purpose output mode
+  GPIOC -> MODER |= 0x50000;                // GPIOC MODER9 and MODER8 set to 01 and 01 for general purpose output mode
+  assert(GPIOC -> MODER == 0x50000);        // Checks GPIOC MODER9 and MODER8
 
   // The offset for the output type is 0x04, so this memory address is 0x4800 0804.
   // &= used to clear by bitwise-AND operation on 0s.
