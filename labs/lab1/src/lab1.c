@@ -12,18 +12,18 @@ void SystemClock_Config(void);
 int main(void) {
   // Initializes the HAL library
   HAL_Init();
+
+  assert(GPIOC -> MODER == (0x00000000));           // Checks GPIOC MODER registers are cleared
+  assert(GPIOC -> OTYPER == (0x0000));              // Checks GPIOC OTYPER registers are cleared
+  assert(GPIOC -> OSPEEDR == (0x00000000));         // Checks GPIOC OSPEEDR registers are cleared
+  assert(GPIOC -> PUPDR == (0x00000000));           // Checks GPIOC PUPDR registers are cleared
+  assert(GPIOC -> ODR == (0x0000));                 // Checks GPIOC ODR registers are cleared
   
   // Initializes the system clock
   SystemClock_Config();     
 
   //RCC enables system clock to be used for GPIO clock
   HAL_RCC_GPIOC_CLK_ENABLE();
-
-  GPIOC -> MODER &= (0x00000000);         // Clearing all GPIOC MODER registers
-  GPIOC -> OTYPER &= (0x0000);            // Clearing all GPIOC OTYPER registers
-  GPIOC -> OSPEEDR &= (0x00000000);       // Clearing all GPIOC OSPEEDR registers
-  GPIOC -> PUPDR &= (0x00000000);         // Clearing all GPIOC PUPDR registers
-  GPIOC -> ODR &= (0x0000);               // Clearing all GPIOC ODR registers
   
   // Instead of using the HAL library, we can program the direct memory address for each peripheral register.
   // The memory address for GPIOC is 0x4800 0800.
