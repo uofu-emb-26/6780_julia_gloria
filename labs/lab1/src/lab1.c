@@ -57,7 +57,8 @@ int main(void) {
   
   // The offset for the output data register is 0x14, so this memory address is 0x4800 0814.
   
-  GPIOC -> ODR |= 0x100;                  // GPIOC ODR8 set to 1, output of VDD (Logical 1).
+  GPIOC -> ODR |= 0x100;                      // GPIOC ODR8 set to 1, output of VDD (Logical 1).
+  assert((GPIOC -> ODR == 0x100));            // Checks GPIOC ODR8
 
   //HAL_GPIO_Init(GPIOC, &initStr);       // Initialize pins PC8 & PC9
   /*HAL_GPIO_WritePin(GPIOC, 
