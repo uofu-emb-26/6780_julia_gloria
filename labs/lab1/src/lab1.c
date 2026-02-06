@@ -1,5 +1,6 @@
 #include "main.h"
 #include "assert.h"
+#include "hal_gpio.h"
 #include "stm32f072xb.h"
 #include "stm32f0xx_hal.h"
 
@@ -30,31 +31,33 @@ int main(void) {
   // The offset for input mode is 0x00, so no offset address is calculated.
   // ST provides header files for each offset (The following shows this shortcut).
 
-  GPIOC -> MODER |= 0x50000;                  // GPIOC MODER9 and MODER8 set to 01 and 01 for general purpose output mode
-  assert(GPIOC -> MODER == 0x50000);          // Checks GPIOC MODER9 and MODER8
+  // GPIOC -> MODER |= 0x50000;                  // GPIOC MODER9 and MODER8 set to 01 and 01 for general purpose output mode
 
   // The offset for the output type is 0x04, so this memory address is 0x4800 0804.
   // &= used to clear by bitwise-AND operation on 0s.
 
-  GPIOC -> OTYPER &= ~(0x300);                // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
-  assert((GPIOC -> OTYPER & 0x300) == 0);     // Checks GPIOC OT9 and OT8 are cleared
+  // Points to a HAL struct and a custom GPIO initialization function to create the correct output registers. 
+  GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9,
+                              GPIO_MODE_OUTPUT_PP,
+                              GPIO_SPEED_FREQ_LOW,
+                              GPIO_NOPULL};
+
+  My_HAL_GPIO_Init(GPIOC, &initStr);
+  assert(GPIOC -> MODER == 0x50000);          // Checks GPIOC MODER9 and MODER8.
+  assert((GPIOC -> OTYPER & 0x300) == 0);     // Checks GPIOC OT9 and OT8 are cleared.
+  assert((GPIOC -> OSPEEDR & 0x50000) == 0);  // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
+  assert((GPIOC -> PUPDR & 0xF0000) == 0);    // Checks GPIOC PUPDR9 and PUPDR8 are cleared to 00.
+
+  //GPIOC -> OTYPER &= ~(0x300);                // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
 
   // The offset for the output speed is 0x08, so this memory address is 0x4800 0808.
 
-  GPIOC -> OSPEEDR &= ~(0x50000);             // GPIOC OSPEEDR9 and OSPEEDR8 cleared to x0 for low-speed output configuration.
-  assert((GPIOC -> OSPEEDR & 0x50000) == 0);  // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
+  //GPIOC -> OSPEEDR &= ~(0x50000);             // GPIOC OSPEEDR9 and OSPEEDR8 cleared to x0 for low-speed output configuration.
 
   // The offset for the pull-up pull-down resistors is 0x0C, so this memory address is 0x4800 080C.
 
-  GPIOC -> PUPDR &= ~(0xF0000);               // GPIOC PUPDR9 and PUPDR8 cleared to 00 for no pull-up, no pull-down configuration.
-  assert((GPIOC -> PUPDR & 0xF0000) == 0);    // Checks GPIOC PUPDR9 and PUPDR8 are cleared to 00.
+  // GPIOC -> PUPDR &= ~(0xF0000);               // GPIOC PUPDR9 and PUPDR8 cleared to 00 for no pull-up, no pull-down configuration.
 
-  // Initializes the specific GPIO peripheral of desired pins
-  /*GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9,
-                              GPIO_MODE_OUTPUT_PP,
-                              GPIO_SPEED_FREQ_LOW,
-                              GPIO_NOPULL};*/
-  
   // The offset for the output data register is 0x14, so this memory address is 0x4800 0814.
   
   GPIOC -> ODR |= 0x100;                      // GPIOC ODR8 set to 1, output of VDD (Logical 1).
