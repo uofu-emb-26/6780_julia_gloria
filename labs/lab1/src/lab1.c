@@ -37,16 +37,16 @@ int main(void) {
   // &= used to clear by bitwise-AND operation on 0s.
 
   // Points to a HAL struct and a custom GPIO initialization function to create the correct output registers. 
-  GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9,
+  GPIO_InitTypeDef initStr = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
                               GPIO_MODE_OUTPUT_PP,
                               GPIO_SPEED_FREQ_LOW,
                               GPIO_NOPULL};
 
   My_HAL_GPIO_Init(GPIOC, &initStr);
-  assert(GPIOC -> MODER == 0x50000);            // Checks GPIOC MODER9 and MODER8.
-  assert((GPIOC -> OTYPER & 0x300) == 0);       // Checks GPIOC OT9 and OT8 are cleared.
-  assert((GPIOC -> OSPEEDR & 0x50000) == 0);    // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
-  assert((GPIOC -> PUPDR & 0xF0000) == 0);      // Checks GPIOC PUPDR9 and PUPDR8 are cleared to 00.
+  assert(GPIOC -> MODER == 0x55000);            // Checks GPIOC MODER9 and MODER8.
+  assert((GPIOC -> OTYPER & 0x3C0) == 0);       // Checks GPIOC OT9 and OT8 are cleared.
+  assert((GPIOC -> OSPEEDR & 0x55000) == 0);    // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
+  assert((GPIOC -> PUPDR & 0xFF000) == 0);      // Checks GPIOC PUPDR9 and PUPDR8 are cleared to 00.
 
   // GPIOC -> OTYPER &= ~(0x300);                  // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
 
@@ -64,8 +64,8 @@ int main(void) {
   
   // The following is a custom HAL function that sets a GPIO output to 1 (HIGH) or 0 (LOW).
   // Here, it is used to set PC8 (LD4) to HIGH.
-  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
-  assert((GPIOC -> ODR == 0x100));              // Checks GPIOC ODR8
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_6, GPIO_PIN_SET);
+  assert((GPIOC -> ODR == 0x140));              // Checks GPIOC ODR8
 
   //HAL_GPIO_Init(GPIOC, &initStr);       // Initialize pins PC8 & PC9
   /*HAL_GPIO_WritePin(GPIOC, 
@@ -79,10 +79,10 @@ int main(void) {
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
 
     // This is a function that toggles the pins back and forth using bitwise inversion.
-    My_HAL_GPIO_TogglePin(GPIOC, (GPIO_PIN_8 | GPIO_PIN_9));
+    My_HAL_GPIO_TogglePin(GPIOC, (GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9));
 
     // Checks if GPIOC ODR9 XOR ODR8 are set.
-    assert((GPIOC -> ODR ^ 0x300) == 0x100 || (GPIOC -> ODR ^ 0x300) == 0x200);
+    assert((GPIOC -> ODR ^ 0x3C0) == 0x140 || (GPIOC -> ODR ^ 0x3C0) == 0x280);
   }
 }
 
