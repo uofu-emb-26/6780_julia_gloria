@@ -7,7 +7,7 @@ void SystemClock_Config(void);
 #ifndef HAL_RCC_GPIOC_CLK_EN
 #define HAL_RCC_GPIOC_CLK_EN
 
-void HAL_RCC_GPIOC_CLK_ENABLE(void);
+void HAL_RCC_GPIO_CLK_ENABLE(void);
 
 #endif 
 

@@ -24,7 +24,7 @@ int main(void) {
   SystemClock_Config();     
 
   //RCC enables system clock to be used for GPIO clock
-  HAL_RCC_GPIOC_CLK_ENABLE();
+  HAL_RCC_GPIO_CLK_ENABLE();
   
   // Instead of using the HAL library, we can program the direct memory address for each peripheral register.
   // The memory address for GPIOC is 0x4800 0800.
@@ -39,14 +39,24 @@ int main(void) {
   // Points to a HAL struct and a custom GPIO initialization function to create the correct output registers. 
   GPIO_InitTypeDef initStr = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
                               GPIO_MODE_OUTPUT_PP,
-                              GPIO_SPEED_FREQ_LOW,
-                              GPIO_NOPULL};
+                              GPIO_NOPULL,
+                              GPIO_SPEED_FREQ_LOW};
 
   My_HAL_GPIO_Init(GPIOC, &initStr);
   assert(GPIOC -> MODER == 0x55000);            // Checks GPIOC MODER9 and MODER8.
   assert((GPIOC -> OTYPER & 0x3C0) == 0);       // Checks GPIOC OT9 and OT8 are cleared.
-  assert((GPIOC -> OSPEEDR & 0x55000) == 0);    // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
   assert((GPIOC -> PUPDR & 0xFF000) == 0);      // Checks GPIOC PUPDR9 and PUPDR8 are cleared to 00.
+  assert((GPIOC -> OSPEEDR & 0x55000) == 0);    // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
+
+  GPIO_InitTypeDef button = { GPIO_PIN_0,
+                              GPIO_MODE_INPUT,
+                              GPIO_PULLDOWN,
+                              GPIO_SPEED_FREQ_LOW};
+
+  My_HAL_GPIO_Init(GPIOA, &button);             
+  assert((GPIOA -> MODER & 0x3) == 0);          // Checks GPIOA MODER0 is cleared.
+  assert((GPIOA -> PUPDR & 0x2) == 2);          // Checks GPIOA PUPDR0 is set to 10.
+  assert((GPIOA -> OSPEEDR & 0x1) == 0);        // Checks GPIOA OSPEEDR0 is cleared.
 
   // GPIOC -> OTYPER &= ~(0x300);                  // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
 
@@ -86,8 +96,8 @@ int main(void) {
   }
 }
 
-void HAL_RCC_GPIOC_CLK_ENABLE(void) {
-    RCC -> AHBENR |= RCC_AHBENR_GPIOCEN;
+void HAL_RCC_GPIO_CLK_ENABLE(void) {
+    RCC -> AHBENR |= (RCC_AHBENR_GPIOCEN | RCC_AHBENR_GPIOAEN);
 }
 
 /**

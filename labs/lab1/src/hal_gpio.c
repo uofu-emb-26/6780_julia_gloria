@@ -100,14 +100,14 @@ void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init) {
 
         // Sets GPIO pins to have a pull-up resistor.
         else if (GPIO_Init -> Pull == GPIO_PULLUP) {
-            GPIOx -> PUPDR &= ~((1 << (position + 1)));
+            GPIOx -> PUPDR &= ~(1 << (position + 1));
             GPIOx -> PUPDR |= (1 << position);
         }
 
         // Sets GPIO pins to have a pull-down resistor.
         else if (GPIO_Init -> Pull == GPIO_PULLDOWN) {
             GPIOx -> PUPDR &= ~(1 << position);
-            GPIOx -> PUPDR |= ~(1 << (position + 1));
+            GPIOx -> PUPDR |= (1 << (position + 1));
         }
 
         // Error message if given incorrect parameter.
