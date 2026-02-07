@@ -73,9 +73,9 @@ int main(void) {
   // GPIOC -> ODR |= 0x100;                        // GPIOC ODR8 set to 1, output of VDD (Logical 1).
   
   // The following is a custom HAL function that sets a GPIO output to 1 (HIGH) or 0 (LOW).
-  // Here, it is used to set PC8 (LD4) to HIGH.
-  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_6, GPIO_PIN_SET);
-  assert((GPIOC -> ODR == 0x140));              // Checks GPIOC ODR8
+  // Here, it is used to set PC8 (LD4) and PC9 (LD5) to HIGH.
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_SET);
+  assert((GPIOC -> ODR == 0x300));              // Checks GPIOC ODR8
 
   //HAL_GPIO_Init(GPIOC, &initStr);       // Initialize pins PC8 & PC9
   /*HAL_GPIO_WritePin(GPIOC, 
@@ -88,11 +88,13 @@ int main(void) {
     // Toggle on the clock cycle of the GPIO both pins 8 and 9.
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
 
-    // This is a function that toggles the pins back and forth using bitwise inversion.
-    My_HAL_GPIO_TogglePin(GPIOC, (GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9));
+    if (My_HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == 1) {
+      // This is a function that toggles the pins back and forth using bitwise inversion.
+      My_HAL_GPIO_TogglePin(GPIOC, (GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9));
+    }
 
     // Checks if GPIOC ODR9 XOR ODR8 are set.
-    assert((GPIOC -> ODR ^ 0x3C0) == 0x140 || (GPIOC -> ODR ^ 0x3C0) == 0x280);
+    assert((GPIOC -> ODR ^ 0x3C0) == 0x300 || (GPIOC -> ODR ^ 0x3C0) == 0x0C0);
   }
 }
 
