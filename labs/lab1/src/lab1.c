@@ -31,7 +31,7 @@ int main(void) {
   // The offset for input mode is 0x00, so no offset address is calculated.
   // ST provides header files for each offset (The following shows this shortcut).
 
-  // GPIOC -> MODER |= 0x50000;                  // GPIOC MODER9 and MODER8 set to 01 and 01 for general purpose output mode
+  // GPIOC -> MODER |= 0x50000;                    // GPIOC MODER9 and MODER8 set to 01 and 01 for general purpose output mode
 
   // The offset for the output type is 0x04, so this memory address is 0x4800 0804.
   // &= used to clear by bitwise-AND operation on 0s.
@@ -43,25 +43,29 @@ int main(void) {
                               GPIO_NOPULL};
 
   My_HAL_GPIO_Init(GPIOC, &initStr);
-  assert(GPIOC -> MODER == 0x50000);          // Checks GPIOC MODER9 and MODER8.
-  assert((GPIOC -> OTYPER & 0x300) == 0);     // Checks GPIOC OT9 and OT8 are cleared.
-  assert((GPIOC -> OSPEEDR & 0x50000) == 0);  // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
-  assert((GPIOC -> PUPDR & 0xF0000) == 0);    // Checks GPIOC PUPDR9 and PUPDR8 are cleared to 00.
+  assert(GPIOC -> MODER == 0x50000);            // Checks GPIOC MODER9 and MODER8.
+  assert((GPIOC -> OTYPER & 0x300) == 0);       // Checks GPIOC OT9 and OT8 are cleared.
+  assert((GPIOC -> OSPEEDR & 0x50000) == 0);    // Checks GPIOC OSPEEDR9 and OSPEEDR8 are cleared to x0.
+  assert((GPIOC -> PUPDR & 0xF0000) == 0);      // Checks GPIOC PUPDR9 and PUPDR8 are cleared to 00.
 
-  //GPIOC -> OTYPER &= ~(0x300);                // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
+  // GPIOC -> OTYPER &= ~(0x300);                  // GPIOC OT9 and OT8 cleared to 0 for push-pull output type.
 
   // The offset for the output speed is 0x08, so this memory address is 0x4800 0808.
 
-  //GPIOC -> OSPEEDR &= ~(0x50000);             // GPIOC OSPEEDR9 and OSPEEDR8 cleared to x0 for low-speed output configuration.
+  // GPIOC -> OSPEEDR &= ~(0x50000);               // GPIOC OSPEEDR9 and OSPEEDR8 cleared to x0 for low-speed output configuration.
 
   // The offset for the pull-up pull-down resistors is 0x0C, so this memory address is 0x4800 080C.
 
-  // GPIOC -> PUPDR &= ~(0xF0000);               // GPIOC PUPDR9 and PUPDR8 cleared to 00 for no pull-up, no pull-down configuration.
+  // GPIOC -> PUPDR &= ~(0xF0000);                 // GPIOC PUPDR9 and PUPDR8 cleared to 00 for no pull-up, no pull-down configuration.
 
   // The offset for the output data register is 0x14, so this memory address is 0x4800 0814.
   
-  GPIOC -> ODR |= 0x100;                      // GPIOC ODR8 set to 1, output of VDD (Logical 1).
-  assert((GPIOC -> ODR == 0x100));            // Checks GPIOC ODR8
+  // GPIOC -> ODR |= 0x100;                        // GPIOC ODR8 set to 1, output of VDD (Logical 1).
+  
+  // The following is a custom HAL function that sets a GPIO output to 1 (HIGH) or 0 (LOW).
+  // Here, it is used to set PC8 (LD4) to HIGH.
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+  assert((GPIOC -> ODR == 0x100));              // Checks GPIOC ODR8
 
   //HAL_GPIO_Init(GPIOC, &initStr);       // Initialize pins PC8 & PC9
   /*HAL_GPIO_WritePin(GPIOC, 
@@ -74,7 +78,8 @@ int main(void) {
     // Toggle on the clock cycle of the GPIO both pins 8 and 9.
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
 
-    GPIOC -> ODR ^= 0x300;                // GPIOC ODR9 and ODR8 inverted.
+    // This is a function that toggles the pins back and forth using bitwise inversion.
+    My_HAL_GPIO_TogglePin(GPIOC, (GPIO_PIN_8 | GPIO_PIN_9));
 
     // Checks if GPIOC ODR9 XOR ODR8 are set.
     assert((GPIOC -> ODR ^ 0x300) == 0x100 || (GPIOC -> ODR ^ 0x300) == 0x200);

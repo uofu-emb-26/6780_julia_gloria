@@ -93,18 +93,26 @@ void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init) {
             fprintf(stderr, "GPIO_InitTypeDef struct speed (GPIO_SPEED_FREQ_x defined HAL) is not set properly.\n");
         }
 
+        // Sets GPIO pins to no pull-up or pull-down resistors.
         if (GPIO_Init -> Pull == GPIO_NOPULL) {
             GPIOx -> PUPDR &= ~((1 << (position + 1)) | (1 << position));
         }
 
+        // Sets GPIO pins to have a pull-up resistor.
         else if (GPIO_Init -> Pull == GPIO_PULLUP) {
             GPIOx -> PUPDR &= ~((1 << (position + 1)));
             GPIOx -> PUPDR |= (1 << position);
         }
 
+        // Sets GPIO pins to have a pull-down resistor.
         else if (GPIO_Init -> Pull == GPIO_PULLDOWN) {
             GPIOx -> PUPDR &= ~(1 << position);
             GPIOx -> PUPDR |= ~(1 << (position + 1));
+        }
+
+        // Error message if given incorrect parameter.
+        else {
+            fprintf(stderr, "GPIO_InitTypeDef struct pull resistors (GPIO_PULLx defined HAL) is not set properly.\n");
         }
     }
 }
@@ -123,14 +131,21 @@ GPIO_PinState My_HAL_GPIO_ReadPin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 }
 */
 
-/*
-void My_HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState)
-{
-}
-*/
+void My_HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState) {
+    if (PinState == GPIO_PIN_SET) {
+        GPIOx -> ODR |= GPIO_Pin;
+    }
 
-/*
-void My_HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
-{
+    else if (PinState == GPIO_PIN_RESET) {
+        GPIOx -> ODR &= ~GPIO_Pin;
+    }
+
+    else {
+        fprintf(stderr, "PinState (GPIO_PIN_SET or GPIO_PIN_RESET) not set properly.\n");
+    }
 }
-*/
+
+void My_HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+    GPIOx -> ODR ^= GPIO_Pin;
+}
+
