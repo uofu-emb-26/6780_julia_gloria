@@ -52,57 +52,57 @@ Examining the BSRR register, to clear the fourth bit in ODR, you would need to s
 ### Perform the following bitwise operations:
 
 > 0xAD | 0xC7 = ?
-> - - - - - - - -
+> 
 > &nbsp;&nbsp;&nbsp;0b 1010 1101
 >
 > OR 0b 1100 0111
-> - - - - - - - -
+> 
 > &nbsp;&nbsp;&nbsp;0b 1110 1111
 >
 > &nbsp;&nbsp;&nbsp;0x E    F
-> - - - - - - - -
+> 
 > 0xEF
 
 The OR operation results in 0xEF.
 
 > 0xAD & 0xC7 = ?
-> - - - - - - - - -
+> 
 > &nbsp;&nbsp;&nbsp;&nbsp;0b 1010 1101
 >
 > AND 0b 1100 0111
-> - - - - - - - - -
+> 
 > &nbsp;&nbsp;&nbsp;&nbsp;0b 1000 0101
 >
 > &nbsp;&nbsp;&nbsp;&nbsp;0x 8    5
-> - - - - - - - - -
+> 
 > 0x85
 
 The AND operation results in 0x85.
 
 > 0xAD & ~(0xC7)
-> - - - - - - - - -
+> 
 > &nbsp;&nbsp;&nbsp;&nbsp;0b 1010 1101
 >
 > AND 0b 0011 1000
-> - - - - - - - - -
+> 
 > &nbsp;&nbsp;&nbsp;&nbsp;0b 0010 1000
 >
 > &nbsp;&nbsp;&nbsp;&nbsp;0x 3    8
-> - - - - - - - - -
+> 
 > 0x38
 
 The AND operation results in 0x38.
 
 > 0xAD ^0xC7
-> - - - - - - - - -
+> 
 > &nbsp;&nbsp;&nbsp;&nbsp;0b 1010 1101
 >
 > XOR 0b 1100 0111
-> - - - - - - - - -
+> 
 > &nbsp;&nbsp;&nbsp;&nbsp;0b 0110 1010
 >
 > &nbsp;&nbsp;&nbsp;&nbsp;0x 6    A
-> - - - - - - - - -
+> 
 > 0x6A
 
 The XOR operation results in 0x6A.
