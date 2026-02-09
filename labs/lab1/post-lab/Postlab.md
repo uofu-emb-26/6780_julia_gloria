@@ -51,15 +51,15 @@ Examining the BSRR register, to clear the fourth bit in ODR, you would need to s
 
 ### Perform the following bitwise operations:
 
-> 0xAD | 0xC7 = ?
-> - - - - - - - -
->    0b 1010 1101
-> OR 0b 1100 0111
-> - - - - - - - -
->    0b 1110 1111
->    0x E    F
-> - - - - - - - -
-> 0xEF
+> \\0xAD | 0xC7 = ?
+> \\- - - - - - - -
+> \\   0b 1010 1101
+> \\OR 0b 1100 0111
+> \\- - - - - - - -
+> \\   0b 1110 1111
+> \\   0x E    F
+> \\- - - - - - - -
+> \\0xEF
 
 The OR operation results in 0xEF.
 
