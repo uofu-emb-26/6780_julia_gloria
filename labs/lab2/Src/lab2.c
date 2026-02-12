@@ -1,5 +1,9 @@
 #include "main.h"
+#include "assert.h"
+#include "hal_gpio.h"
+#include "stm32f072xb.h"
 #include "stm32f0xx_hal.h"
+#include "stm32f0xx_it.h"
 
 void SystemClock_Config(void);
 
@@ -11,14 +15,33 @@ int main(void)
 {
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
+
   /* Configure the system clock */
   SystemClock_Config();
 
-  while (1)
-  {
- 
+  HAL_RCC_GPIO_CLK_ENABLE();
+
+  GPIO_InitTypeDef initial = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
+                              GPIO_MODE_OUTPUT_PP,
+                              GPIO_NOPULL,
+                              GPIO_SPEED_FREQ_LOW};
+
+  My_HAL_GPIO_Init(GPIOC, &initial);
+
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+
+  
+
+  while (1) {
+    HAL_Delay(500);                       // Delay 500 ms
+
+    My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
   }
   return -1;
+}
+
+void HAL_RCC_GPIO_CLK_ENABLE(void) {
+    RCC -> AHBENR |= (RCC_AHBENR_GPIOCEN | RCC_AHBENR_GPIOAEN);
 }
 
 /**
@@ -62,8 +85,7 @@ void SystemClock_Config(void) {
 void Error_Handler(void) {
   /* User can add their own implementation to report the HAL error return state */
   __disable_irq();
-  while (1)
-  {
+  while (1) {
   }
 }
 

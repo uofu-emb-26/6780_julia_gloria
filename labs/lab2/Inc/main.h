@@ -1,14 +1,21 @@
-#ifndef __MAIN_H
-#define __MAIN_H
+#pragma once
+#include "stm32f072xb.h"
+#include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void SystemClock_Config(void);
 
-void Error_Handler(void);
+#ifndef HAL_RCC_GPIOC_CLK_EN
+#define HAL_RCC_GPIOC_CLK_EN
 
-#ifdef __cplusplus
-}
-#endif
+void HAL_RCC_GPIO_CLK_ENABLE(void);
 
-#endif /* __MAIN_H */
+#endif 
+
+int lab1_main(void);
+int lab2_main(void);
+int lab3_main(void);
+int lab4_main(void);
+int lab5_main(void);
+int lab6_main(void);
+int lab7_main(void);
+
