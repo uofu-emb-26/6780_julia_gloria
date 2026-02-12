@@ -1,4 +1,5 @@
 #include "main.h"
+#include "hal_gpio.h"
 #include "stm32f0xx_hal.h"
 #include "stm32f0xx_it.h"
 
@@ -8,43 +9,45 @@
 /**
   * @brief This function handles Non maskable interrupt.
   */
-void NMI_Handler(void)
-{
-   while (1)
-  {
+void NMI_Handler(void) {
+   while (1) {
   }
 }
 
 /**
   * @brief This function handles Hard fault interrupt.
   */
-void HardFault_Handler(void)
-{
-  while (1)
-  {
+void HardFault_Handler(void) {
+  while (1) {
   }
 }
 
 /**
   * @brief This function handles System service call via SWI instruction.
   */
-void SVC_Handler(void)
-{
+void SVC_Handler(void) {
 }
 
 /**
   * @brief This function handles Pendable request for system service.
   */
-void PendSV_Handler(void)
-{
+void PendSV_Handler(void) {
 }
 
 /**
   * @brief This function handles System tick timer.
   */
-void SysTick_Handler(void)
-{
+void SysTick_Handler(void) {
+  static int counter = 0;
   HAL_IncTick();
+
+  if (counter == 200) {
+    My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+
+    counter = 0;
+  }
+
+  counter++;
 }
 
 /******************************************************************************/
