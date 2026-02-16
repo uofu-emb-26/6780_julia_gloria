@@ -146,3 +146,16 @@ void My_HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     GPIOx -> ODR ^= GPIO_Pin;
 }
 
+void My_HAL_EXTI0_ENABLE(void) {
+    // Enable the EXTI0
+    EXTI -> IMR |= 0x1;
+    // Enabling rising trigger detection
+    EXTI -> RTSR |= 0x1;
+    // Disabling falling trigger detection
+    EXTI -> FTSR &= ~(0x1);
+}
+
+void PA0_EXTI0(void) {
+    SYSCFG -> EXTICR[0] &= ~(0x7);
+}
+

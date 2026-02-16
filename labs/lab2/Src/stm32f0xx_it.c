@@ -57,3 +57,17 @@ void SysTick_Handler(void) {
 /* please refer to the startup file (startup_stm32f0xx.s).                    */
 /******************************************************************************/
 
+void EXTI0_1_IRQHandler() {
+  static int counter = 1;
+
+  if ((counter % 100000) == 0) {
+    My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+  }
+
+  if (counter > 1400000) {
+    counter = 1;
+    EXTI -> PR |= 0x1;
+  }
+  
+  counter++;
+}

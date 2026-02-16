@@ -10,27 +10,57 @@ void SystemClock_Config(void);
 /**
   * @brief  The application entry point.
   * @retval int
-  */
-int main(void)
-{
+*/
+int main(void) {
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
   /* Configure the system clock */
   SystemClock_Config();
 
+  /* Configure all peripheral clocks */
   HAL_RCC_GPIO_CLK_ENABLE();
+  HAL_RCC_SYSCFG_CLK_ENABLE();
 
+  /* Configure GPIO for LED output and button input */
   GPIO_InitTypeDef initial = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
                               GPIO_MODE_OUTPUT_PP,
                               GPIO_NOPULL,
                               GPIO_SPEED_FREQ_LOW};
 
+  GPIO_InitTypeDef buttoni = {GPIO_PIN_0,
+                              GPIO_MODE_INPUT,
+                              GPIO_PULLDOWN,
+                              GPIO_SPEED_FREQ_LOW};
+
   My_HAL_GPIO_Init(GPIOC, &initial);
+  My_HAL_GPIO_Init(GPIOA, &buttoni);
+
+  /* Checking for EXTI0 and enabling it. */
+
+  assert((EXTI -> IMR & 0x1) == 0x0);
+
+  My_HAL_EXTI0_ENABLE();
+
+  assert((EXTI -> IMR & 0x1) == 0x1);
+  assert((EXTI -> RTSR & 0x1) == 0x1);
+  assert((EXTI -> FTSR & 0x1) == 0x0);
+
+  /* Connecting input PA0 to EXTI0 */
+
+  //assert((SYSCFG -> EXTICR[0] & 0xF) == 0x0);
+
+  PA0_EXTI0();
+
+  assert((SYSCFG -> EXTICR[0] & 0x7) == 0x0);
+
+  /* Setting Green LED once. */
 
   My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 
-  
+  NVIC_EnableIRQ(EXTI0_1_IRQn);
+  NVIC_SetPriority(EXTI0_1_IRQn, 1);
+  NVIC_SetPriority(SysTick_IRQn, 0);
 
   while (1) {
     HAL_Delay(500);                       // Delay 500 ms
@@ -41,7 +71,11 @@ int main(void)
 }
 
 void HAL_RCC_GPIO_CLK_ENABLE(void) {
-    RCC -> AHBENR |= (RCC_AHBENR_GPIOCEN | RCC_AHBENR_GPIOAEN);
+  RCC -> AHBENR |= (RCC_AHBENR_GPIOCEN | RCC_AHBENR_GPIOAEN);
+}
+
+void HAL_RCC_SYSCFG_CLK_ENABLE(void) {
+  RCC -> APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN;
 }
 
 /**
