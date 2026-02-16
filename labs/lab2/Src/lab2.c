@@ -60,7 +60,7 @@ int main(void) {
 
   NVIC_EnableIRQ(EXTI0_1_IRQn);
   NVIC_SetPriority(EXTI0_1_IRQn, 1);
-  NVIC_SetPriority(SysTick_IRQn, 0);
+  NVIC_SetPriority(SysTick_IRQn, 3);
 
   while (1) {
     HAL_Delay(500);                       // Delay 500 ms
