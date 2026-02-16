@@ -59,8 +59,8 @@ int main(void) {
   My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 
   NVIC_EnableIRQ(EXTI0_1_IRQn);
-  NVIC_SetPriority(EXTI0_1_IRQn, 1);
-  NVIC_SetPriority(SysTick_IRQn, 3);
+  NVIC_SetPriority(EXTI0_1_IRQn, 3);
+  NVIC_SetPriority(SysTick_IRQn, 2);
 
   while (1) {
     HAL_Delay(500);                       // Delay 500 ms
