@@ -20,7 +20,11 @@ The programming manual states that there are 32 bits (0-31) in the IPRx register
 
 ### What was the latency between pushing the Discovery board button and the LED change (interrupt handler start) that you measured with the logic analyzer? Make sure to include a screenshot in the post-lab submission.
 
-I was not able to measure the delay between pushing the button and the LED change. I apologize for not having the time to do it.
+![Interrupt Delay](./img/Interrupt_Delay.jpg)
+
+*Picture of Oscilloscope showing 150 ms delay from negative edge*
+
+I found that the LED change in the LED took about 150 ms from releasing the button in port A (PA0).
 
 ### Why do you need to clear status flag bits in peripherals when servicing their interrupts?
 
