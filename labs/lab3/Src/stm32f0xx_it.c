@@ -1,4 +1,6 @@
 #include "main.h"
+#include <assert.h>
+#include "hal_gpio.h"
 #include "stm32f0xx_hal.h"
 #include "stm32f0xx_it.h"
 
@@ -10,8 +12,7 @@
   */
 void NMI_Handler(void)
 {
-   while (1)
-  {
+   while (1) {
   }
 }
 
@@ -20,30 +21,26 @@ void NMI_Handler(void)
   */
 void HardFault_Handler(void)
 {
-  while (1)
-  {
+  while (1) {
   }
 }
 
 /**
   * @brief This function handles System service call via SWI instruction.
   */
-void SVC_Handler(void)
-{
+void SVC_Handler(void) {
 }
 
 /**
   * @brief This function handles Pendable request for system service.
   */
-void PendSV_Handler(void)
-{
+void PendSV_Handler(void) {
 }
 
 /**
   * @brief This function handles System tick timer.
   */
-void SysTick_Handler(void)
-{
+void SysTick_Handler(void) {
   HAL_IncTick();
 }
 
@@ -54,3 +51,10 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32f0xx.s).                    */
 /******************************************************************************/
 
+void TIM2_IRQHandler(void) {
+  if (TIM2 -> SR & TIM_SR_UIF) {
+    My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+
+    TIM2 -> SR &= ~(TIM_SR_UIF);
+  }
+}
