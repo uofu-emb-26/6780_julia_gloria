@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stm32f0xx_hal.h>
 #include <stm32f0xx_hal_gpio.h>
@@ -147,27 +148,37 @@ void My_HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
 }
 
 void My_HAL_TIMER_Init(void) {
-    // Clear TIM2 registers
-    // TIM2 -> PSC &= ~(0xFFFF);
-    // TIM2 -> ARR &= ~(0xFFFF);
+    // For TIM2, 8 MHz divided by 4 Hz to get 2,000,000
+    // Setting prescalar to (32 - 1), where 32 is the actual divisor.
+    TIM2 -> PSC = 31;
 
-    // 8 MHz clock needs to be divided by 2000000 to get 4Hz.
-    // Setting prescalar to 32
-    TIM2 -> PSC = 32;
-
-    // Setting the auto-reload register to 62500
+    // Setting the auto-reload register divides 2,000,000 by 62500, allowing the prescalar to be 32.
     TIM2 -> ARR = 62500;
 
-    // Setting count to 0
-    // TIM2 -> CNT = 0x0;
+    // For TIM3, 8 MHz divided by 800 Hz to get 10,000
+    // Setting prescalar to (100 - 1), where 100 is the actual divisor.
+    TIM3 -> PSC = 99;
 
-    // Generate an update event
-    // TIM2 -> EGR |= TIM_EGR_UG; 
+    // Setting the auto-reload register divides 100,000 by 100, allowing the prescalar to be 100.
+    TIM3 -> ARR = 100;
 
-    // Update interrupt enable
+    // Update interrupt enable for timer 2.
     TIM2 -> DIER |= TIM_DIER_UIE;
 
     NVIC_EnableIRQ(TIM2_IRQn);
+
+    // Configuring the capture/compare mode register for channels 1 and 2 to an output
+    TIM3 -> CCMR1 &= ~(TIM_CCMR1_CC1S | TIM_CCMR1_CC2S);
+
+    // Configuring OC1M to PWM Mode 2 and OC2M to PWM Mode 1
+    TIM3 -> CCMR1 |= ~(TIM_CCMR1_OC1M | (TIM_CCMR1_OC2M | TIM_CCMR1_OC2M_0));
+    assert((TIM3 -> CCMR1 && ~(TIM_CCMR1_OC1M | (TIM_CCMR1_OC2M | TIM_CCMR1_OC2M_0))) == 0x1);
+
+    // Enabling output compare preload for both channels
+    TIM3 -> CCMR1 |= (TIM_CCMR1_OC1PE | TIM_CCMR1_OC2PE);
+
+    // Enabling capture/compare 1 and 2 output.
+    TIM3 -> CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E);
 
     // Enable timer
     TIM2 -> CR1 |= TIM_CR1_CEN;

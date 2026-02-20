@@ -24,12 +24,20 @@ int main(void)
   // HAL_RCC_SYSCFG_CLK_ENABLE();
   HAL_RCC_TIMERS_CLK_ENABLE();
 
-  GPIO_InitTypeDef initial = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
+  GPIO_InitTypeDef initial = {GPIO_PIN_8 | GPIO_PIN_9,
                               GPIO_MODE_OUTPUT_PP,
                               GPIO_NOPULL,
                               GPIO_SPEED_FREQ_LOW};
 
+  GPIO_InitTypeDef PWMinit = {GPIO_PIN_6 | GPIO_PIN_7,
+                              GPIO_MODE_AF_PP,
+                              GPIO_NOPULL,
+                              GPIO_SPEED_FREQ_LOW};
+                              
+  My_HAL_GPIO_Init(GPIOC, &PWMinit);
   My_HAL_GPIO_Init(GPIOC, &initial);
+
+  GPIOC -> AFR[0] |= (GPIO_AFRL_AFSEL6 | GPIO_AFRL_AFSEL7);
 
   My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 
@@ -39,9 +47,21 @@ int main(void)
   NVIC_SetPriority(SysTick_IRQn, 3);
 
   while (1) {
-    HAL_Delay(500);                       // Delay 500 ms
-
-    My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+    //TIM3->CCR1 = 10; 
+    //TIM3->CCR2 = 10; 
+    //HAL_Delay(500);
+    
+    //TIM3->CCR1 = 50; 
+    //TIM3->CCR2 = 50; 
+    //HAL_Delay(500);
+    
+    //TIM3->CCR1 = 90; 
+    //TIM3->CCR2 = 90; 
+    
+    // Configuring capture/compare registers to 20% of ARR value.
+    TIM3 -> CCR1 = 20;
+    TIM3 -> CCR2 = 20;
+    HAL_Delay(500);
   }
 
   return -1;
@@ -61,7 +81,7 @@ void HAL_RCC_TIMERS_CLK_ENABLE(void) {
   //RCC -> CFGR &= ~(RCC_CFGR_PPRE_DIV16 | RCC_CFGR_HPRE_DIV2);
   
   // Enables timer 2 (TIM2)
-  RCC -> APB1ENR |= RCC_APB1ENR_TIM2EN;
+  RCC -> APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN);
 }
 
 /**
