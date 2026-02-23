@@ -171,8 +171,8 @@ void My_HAL_TIMER_Init(void) {
     TIM3 -> CCMR1 &= ~(TIM_CCMR1_CC1S | TIM_CCMR1_CC2S);
 
     // Configuring OC1M to PWM Mode 2 and OC2M to PWM Mode 1
-    TIM3 -> CCMR1 |= ~(TIM_CCMR1_OC1M | (TIM_CCMR1_OC2M | TIM_CCMR1_OC2M_0));
-    assert((TIM3 -> CCMR1 && ~(TIM_CCMR1_OC1M | (TIM_CCMR1_OC2M | TIM_CCMR1_OC2M_0))) == 0x1);
+    TIM3 -> CCMR1 |= (TIM_CCMR1_OC1M | (TIM_CCMR1_OC2M & ~(TIM_CCMR1_OC2M_0)));
+    assert((TIM3 -> CCMR1 && (TIM_CCMR1_OC1M | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2)) == 0x1);
 
     // Enabling output compare preload for both channels
     TIM3 -> CCMR1 |= (TIM_CCMR1_OC1PE | TIM_CCMR1_OC2PE);
@@ -180,8 +180,17 @@ void My_HAL_TIMER_Init(void) {
     // Enabling capture/compare 1 and 2 output.
     TIM3 -> CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E);
 
+    // Configuring capture/compare registers to 20% of ARR value.
+    TIM3 -> CCR1 = 20;
+    TIM3 -> CCR2 = 20;
+
+    // Turning on auto-reload preload enabled and update generation turned on
+    TIM3 -> CR1 |= TIM_CR1_ARPE;
+    TIM3 -> EGR |= TIM_EGR_UG;
+
     // Enable timer
     TIM2 -> CR1 |= TIM_CR1_CEN;
+    TIM3 -> CR1 |= TIM_CR1_CEN;
 }
 
 void My_HAL_EXTI0_ENABLE(void) {

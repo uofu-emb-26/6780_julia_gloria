@@ -37,7 +37,10 @@ int main(void)
   My_HAL_GPIO_Init(GPIOC, &PWMinit);
   My_HAL_GPIO_Init(GPIOC, &initial);
 
-  GPIOC -> AFR[0] |= (GPIO_AFRL_AFSEL6 | GPIO_AFRL_AFSEL7);
+  GPIOC -> AFR[0] &= ~(0xFFFFFFFF);
+  GPIOC -> AFR[0] |= (GPIO_AFRL_AFSEL0);
+
+  assert(GPIO_AFRL_AFSEL0 == 0xF);
 
   My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 
@@ -47,21 +50,42 @@ int main(void)
   NVIC_SetPriority(SysTick_IRQn, 3);
 
   while (1) {
-    //TIM3->CCR1 = 10; 
-    //TIM3->CCR2 = 10; 
-    //HAL_Delay(500);
-    
-    //TIM3->CCR1 = 50; 
-    //TIM3->CCR2 = 50; 
-    //HAL_Delay(500);
-    
-    //TIM3->CCR1 = 90; 
-    //TIM3->CCR2 = 90; 
-    
-    // Configuring capture/compare registers to 20% of ARR value.
-    TIM3 -> CCR1 = 20;
-    TIM3 -> CCR2 = 20;
-    HAL_Delay(500);
+    static uint8_t CASCADING = 0x1;
+
+    /*
+      If CASCADING is set to 1, then a fading effect will occur in LD6 (blue) and LD3 (red).
+      Otherwise, it will be in a default state of alternating between 3 different duty cycles.
+    */
+
+    if (CASCADING == 0x1) {
+      for (int i = 0; i < 100; i = i + 10) {
+        TIM3->CCR1 = i; 
+        TIM3->CCR2 = i; 
+        HAL_Delay(20);
+      }
+
+      for (int i = 100; i > 0; i = i - 10) {
+        TIM3->CCR1 = i; 
+        TIM3->CCR2 = i; 
+        HAL_Delay(20);
+      }
+    }
+    else {
+      TIM3 -> CCR1 = 20;
+      TIM3 -> CCR2 = 20;
+
+      HAL_Delay(1000);
+
+      TIM3 -> CCR1 = 50;
+      TIM3 -> CCR2 = 50;
+
+      HAL_Delay(1000);
+
+      TIM3 -> CCR1 = 90;
+      TIM3 -> CCR2 = 90;
+
+      HAL_Delay(1000);
+    }
   }
 
   return -1;
