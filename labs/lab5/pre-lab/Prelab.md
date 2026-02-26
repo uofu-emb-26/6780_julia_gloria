@@ -30,9 +30,9 @@ The restart condition is when the start condition is called when the stop condit
 
 ### What peripheral register would you use to set the read/write direction of the next I2C transaction?
 
-[I2C_CR2](./img/I2C_CR2.png)
+![I2C_CR2](./img/I2C_CR2.png)
 
-[RD_WRN](./img/RD_WRN.png)
+![RD_WRN](./img/RD_WRN.png)
 
 (*RM0091 Rev 10 687-688*)
 
@@ -40,7 +40,7 @@ The read and write direction is set by the RD_WRN bit in the I<sup>2</sup>C cont
 
 ### The 10-bit SADD bit-field holds the slave device address. Since standard I2C addresses only use 7 bits, to which bits in the bit-field would you write the shorter address?
 
-[SADD](./img/SADD.png)
+![SADD](./img/SADD.png)
 
 (*RM0091 Rev 10 689*)
 
