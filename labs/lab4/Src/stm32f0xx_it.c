@@ -1,6 +1,11 @@
 #include "main.h"
+#include <assert.h>
+#include "hal_gpio.h"
 #include "stm32f0xx_hal.h"
 #include "stm32f0xx_it.h"
+
+extern volatile char rx_data;
+extern volatile uint8_t rx_flag;
 
 /******************************************************************************/
 /*           Cortex-M0 Processor Interruption and Exception Handlers          */
@@ -10,8 +15,7 @@
   */
 void NMI_Handler(void)
 {
-   while (1)
-  {
+   while (1) {
   }
 }
 
@@ -20,30 +24,26 @@ void NMI_Handler(void)
   */
 void HardFault_Handler(void)
 {
-  while (1)
-  {
+  while (1) {
   }
 }
 
 /**
   * @brief This function handles System service call via SWI instruction.
   */
-void SVC_Handler(void)
-{
+void SVC_Handler(void) {
 }
 
 /**
   * @brief This function handles Pendable request for system service.
   */
-void PendSV_Handler(void)
-{
+void PendSV_Handler(void) {
 }
 
 /**
   * @brief This function handles System tick timer.
   */
-void SysTick_Handler(void)
-{
+void SysTick_Handler(void) {
   HAL_IncTick();
 }
 
@@ -54,3 +54,11 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32f0xx.s).                    */
 /******************************************************************************/
 
+/*
+void USART1_IRQHandler(void) {
+  if (USART1 -> ISR & USART_ISR_RXNE) {
+    rx_data = (char)USART1 -> RDR; 
+    rx_flag = 1;
+  }
+}
+*/
