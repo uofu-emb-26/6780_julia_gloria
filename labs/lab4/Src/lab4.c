@@ -1,3 +1,4 @@
+#include <string.h>
 #include "main.h"
 #include "assert.h"
 #include "hal_gpio.h"
@@ -24,6 +25,39 @@ void usart_print(const char* str) {
   while(*str != '\0') {
     usart_transmit(*str++);
   }
+}
+
+_Bool prompt_checker(const char* str, const char* chk) {
+  static int index = 0;
+  static int match = 0;
+  static char log[64];
+  
+  while(*str != '\0') {
+    if (*str == *chk) {
+      match++;
+    }
+    // Debugger
+    // snprintf(log, sizeof(log), "%d", match);
+    // usart_print(log);
+    *str++;
+    *chk++;
+    index++;
+  }
+
+  // usart_print("\r\n");
+
+  if (index == match) {
+    index = 0;
+    match = 0;
+    // usart_print("Match found");
+    return 1;
+  }
+  else {
+    index = 0;
+    match = 0;
+    return 0;
+  }
+
 }
 
 int main(void) {
@@ -60,15 +94,25 @@ int main(void) {
   My_HAL_USART_Init();
 
   // enable NVIC for interrupt handler
-  // NVIC_EnableIRQ(USART1_IRQn);
-  // NVIC_SetPriority(USART1_IRQn, 1);
+  NVIC_EnableIRQ(USART1_IRQn);
+  NVIC_SetPriority(USART1_IRQn, 1);
+
+  // defining states for 
+  typedef enum { POLLING, EXECUTING } State;
+  State state = POLLING;
+
+  char prompt[32];
 
   while (1) {
+    /*
+      4.1 - USART control without interrupt handler
+    /
+
     while(!(USART1 -> ISR & USART_ISR_RXNE));
     char c = (char)USART1 -> RDR;
 
     usart_transmit(c);
-    
+
     usart_print("\n\r");
 
     switch(c) {
@@ -86,8 +130,171 @@ int main(void) {
         break; 
       default:
         usart_print("error!!\n\r");
-        break;                 
-    }
+        break;  
+    } 
+    */
+    if (rx_flag) {
+      char c = rx_data;
+      static index = 0;
+
+      if (state == POLLING) {
+        if (c == '\r') {
+          state = EXECUTING;
+          usart_print("\r\n");
+          index = 0;
+        }
+        else {
+          rx_flag = 0;
+          usart_transmit(c);
+
+          prompt[index] = c;
+          prompt[index + 1] = '\0';
+          index++;
+        }
+      }
+
+      else if (state == EXECUTING) {
+        static _Bool _isLEDon;
+        static _Bool _isLEDoff;
+        rx_flag = 0;
+        usart_print("\r\nEXECUTING . . .\r\n");
+        // usart_print(prompt);
+        // usart_print("\r\n");
+
+        if (prompt_checker(prompt, "NICE")) {
+          // Test command used to make sure that the command system is working
+          usart_print("Very nice!\r\n");
+        }
+
+        else if (prompt_checker(prompt, "LED ON") && !_isLEDoff) {
+          // Function that turns a specific LED color on
+          usart_print("\nPlease enter an LED color: ");
+          _isLEDon = 1;
+        }
+
+        else if (prompt_checker(prompt, "LED OFF") && !_isLEDon) {
+          // Function that turns a specific LED color off
+          usart_print("\nPlease enter an LED color: ");
+          _isLEDoff = 1;
+        }
+
+        else if (prompt_checker(prompt, "RED")) {
+          if (_isLEDon) {
+            _isLEDon = 0;
+            usart_print("\r\nTurning the RED LED on . . .\r\n\n");
+            My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
+          }
+          else if (_isLEDoff) {
+            _isLEDoff = 0;
+            usart_print("\r\nTurning the RED LED off . . .\r\n\n");
+            My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+          }
+          else {
+            usart_print("The RED LED is ");
+            
+            if ((GPIOC -> ODR & GPIO_PIN_6) == GPIO_PIN_6) {
+              usart_print("ON.");
+            }
+            else {
+              usart_print("OFF.");
+            }
+
+            usart_print("\r\n");
+          }
+        }
+
+        else if (prompt_checker(prompt, "BLUE")) {
+          if (_isLEDon) {
+            _isLEDon = 0;
+            usart_print("\r\nTurning the BLUE LED on . . .\r\n\n");
+            My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+          }
+          else if (_isLEDoff) {
+            _isLEDoff = 0;
+            usart_print("\r\nTurning the BLUE LED off . . .\r\n\n");
+            My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+          }
+          else {
+            usart_print("The BLUE LED is ");
+            
+            if ((GPIOC -> ODR & GPIO_PIN_7) == GPIO_PIN_7) {
+              usart_print("ON.");
+            }
+            else {
+              usart_print("OFF.");
+            }
+
+            usart_print("\r\n");
+          }
+        }
+
+        else if (prompt_checker(prompt, "ORANGE")) {
+          if (_isLEDon) {
+            _isLEDon = 0;
+            usart_print("\r\nTurning the ORANGE LED on . . .\r\n\n");
+            My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+          }
+          else if (_isLEDoff) {
+            _isLEDoff = 0;
+            usart_print("\r\nTurning the ORANGE LED off . . .\r\n\n");
+            My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+          }
+          else {
+            usart_print("The ORANGE LED is ");
+            
+            if ((GPIOC -> ODR & GPIO_PIN_8) == GPIO_PIN_8) {
+              usart_print("ON.");
+            }
+            else {
+              usart_print("OFF.");
+            }
+
+            usart_print("\r\n");
+          }
+        }
+
+        else if (prompt_checker(prompt, "GREEN")) {
+          if (_isLEDon) {
+            _isLEDon = 0;
+            usart_print("\r\nTurning the GREEN LED on . . .\r\n\n");
+            My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+          }
+          else if (_isLEDoff) {
+            _isLEDoff = 0;
+            usart_print("\r\nTurning the GREEN LED off . . .\r\n\n");
+            My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+          }
+          else {
+            usart_print("The GREEN LED is ");
+            
+            if ((GPIOC -> ODR & GPIO_PIN_9) == GPIO_PIN_9) {
+              usart_print("ON.");
+            }
+            else {
+              usart_print("OFF.");
+            }
+
+            usart_print("\r\n");
+          }
+        }
+
+        else {
+          usart_print("The command entered is not available\r\n");
+        }
+
+        for (int i = 0; i < sizeof(prompt); i++) {
+          prompt [i] = ' ';
+        }
+        
+        prompt[0] = '\0';
+
+        state = POLLING;
+      }
+      else {
+        usart_print("There is something wrong with the system.\r\n");
+      }
+
+    }    
   }
   return -1;
 }
