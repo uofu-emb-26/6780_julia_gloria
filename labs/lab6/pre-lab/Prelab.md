@@ -1,4 +1,4 @@
-# ECE6780 Pre-Lab 5
+# ECE6780 Pre-Lab 6
 
 ## Questions
 

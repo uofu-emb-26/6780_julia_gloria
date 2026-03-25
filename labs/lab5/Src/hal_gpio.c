@@ -1,0 +1,369 @@
+#include <stdint.h>
+#include <assert.h>
+#include <stdio.h>
+#include <stm32f0xx_hal.h>
+#include <stm32f0xx_hal_gpio.h>
+
+uint8_t receivedNACK = 0;
+
+static void I2C_Setup(I2C_TypeDef* I2C, uint8_t device_address, uint8_t nbytes, uint8_t rd_wrn);
+static void I2C_Write(I2C_TypeDef* I2C, uint8_t nbytes, char data[]);
+static void I2C_Read(I2C_TypeDef* I2C, uint8_t nbytes, char data[]);
+
+    // The following is a built-in HAL struct GPIO_InitTypeDef that describes variables necessary for
+    // initializing the GPIO of a given register.
+    // { uint32_t Pin, uint32_t Mode, uint32_t Pull, uint32_t Speed, uint32_t Alternate }
+
+void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init) {
+    
+    uint32_t position = 0;
+    uint32_t pin;
+    uint32_t pinMask = 0;
+
+    for(pin = 0; pin < 16; pin ++) {
+        // A mask with a bit at a given pin.
+        pinMask = (1 << pin);
+
+        // Checks if the pinMask actually has anything happening to it.
+        // GPIO_Init is a struct which contains a Pin variable.
+        if ((GPIO_Init->Pin & pinMask) == 0) {
+            continue;                           // skips interation
+        }
+        
+        position = pin * 2;                     // position of 32-bit registers
+
+        // Sets GPIO pins to digital input mode
+        if (GPIO_Init -> Mode == GPIO_MODE_INPUT) {
+            GPIOx -> MODER &= ~((1 << (position + 1)) | (1 << position));
+        }
+
+        // Sets GPIO pins to digital output push-pull mode
+        else if (GPIO_Init -> Mode == GPIO_MODE_OUTPUT_PP) {
+            GPIOx -> MODER &= ~(1 << (position + 1));
+            GPIOx -> MODER |= (1 << position);
+
+            GPIOx -> OTYPER &= ~(1 << pin);
+        }
+
+        // Sets GPIO pins to digital output open-drain mode
+        else if (GPIO_Init -> Mode == GPIO_MODE_OUTPUT_OD) {
+            GPIOx -> MODER &= ~(1 << (position + 1));
+            GPIOx -> MODER |= (1 << position);
+
+            GPIOx -> OTYPER |= (1 << pin);
+        }
+
+        // Sets GPIO pins to alternate function push-pull mode
+        else if (GPIO_Init -> Mode == GPIO_MODE_AF_PP) {
+            GPIOx -> MODER |= (1 << (position + 1));
+            GPIOx -> MODER &= ~(1 << position);
+
+            GPIOx -> OTYPER &= ~(1 << pin);
+        }
+
+        // Sets GPIO pins to alternate function open-drain mode
+        else if (GPIO_Init -> Mode == GPIO_MODE_AF_OD) {
+            GPIOx -> MODER |= (1 << (position + 1));
+            GPIOx -> MODER &= ~(1 << position);
+
+            GPIOx -> OTYPER |= (1 << pin);
+        }
+
+        // Sets GPIO pins to digital input analog mode.
+        else if (GPIO_Init -> Mode == GPIO_MODE_ANALOG) {
+            GPIOx -> MODER |= ((1 << (position + 1)) | (1 << position));
+        }
+
+        // Error message if given incorrect parameter.
+        else {
+            fprintf(stderr, "GPIO_InitTypeDef struct operation mode (GPIO_MODE_x defined HAL) is not set properly.\n");
+        }
+
+        // Sets GPIO pins speed to low frequency.
+        if (GPIO_Init -> Speed == GPIO_SPEED_FREQ_LOW) {
+            GPIOx -> OSPEEDR &= ~(1 << position);
+        }
+        
+        // Sets GPIO pins speed to medium frequency.
+        else if (GPIO_Init -> Speed == GPIO_SPEED_FREQ_MEDIUM) {
+            GPIOx -> OSPEEDR &= ~(1 << (position + 1));
+            GPIOx -> OSPEEDR |= (1 << position);
+        }
+
+        // Sets GPIO pins speed to high frequency
+        else if (GPIO_Init -> Speed == GPIO_SPEED_FREQ_HIGH) {
+            GPIOx -> OSPEEDR |= ((1 << (position + 1)) | (1 << position));
+        }
+
+        // Error message if given incorrect parameter.
+        else {
+            fprintf(stderr, "GPIO_InitTypeDef struct speed (GPIO_SPEED_FREQ_x defined HAL) is not set properly.\n");
+        }
+
+        // Sets GPIO pins to no pull-up or pull-down resistors.
+        if (GPIO_Init -> Pull == GPIO_NOPULL) {
+            GPIOx -> PUPDR &= ~((1 << (position + 1)) | (1 << position));
+        }
+
+        // Sets GPIO pins to have a pull-up resistor.
+        else if (GPIO_Init -> Pull == GPIO_PULLUP) {
+            GPIOx -> PUPDR &= ~(1 << (position + 1));
+            GPIOx -> PUPDR |= (1 << position);
+        }
+
+        // Sets GPIO pins to have a pull-down resistor.
+        else if (GPIO_Init -> Pull == GPIO_PULLDOWN) {
+            GPIOx -> PUPDR &= ~(1 << position);
+            GPIOx -> PUPDR |= (1 << (position + 1));
+        }
+
+        // Error message if given incorrect parameter.
+        else {
+            fprintf(stderr, "GPIO_InitTypeDef struct pull resistors (GPIO_PULLx defined HAL) is not set properly.\n");
+        }
+    }
+}
+
+/*
+void My_HAL_GPIO_DeInit(GPIO_TypeDef  *GPIOx, uint32_t GPIO_Pin) {
+}
+*/
+
+GPIO_PinState My_HAL_GPIO_ReadPin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+    return ((GPIOx -> IDR & GPIO_Pin) && GPIO_Pin);
+}
+
+void My_HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState) {
+    if (PinState == GPIO_PIN_SET) {
+        GPIOx -> ODR |= GPIO_Pin;
+    }
+
+    else if (PinState == GPIO_PIN_RESET) {
+        GPIOx -> ODR &= ~GPIO_Pin;
+    }
+
+    else {
+        fprintf(stderr, "PinState (GPIO_PIN_SET or GPIO_PIN_RESET) not set properly.\n");
+    }
+}
+
+void My_HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+    GPIOx -> ODR ^= GPIO_Pin;
+}
+
+void My_HAL_I2C_Init(void) { // This function is correct
+    // Pre-Scalar Initialization (PRESC = 1)
+    I2C2 -> TIMINGR &= ~(I2C_TIMINGR_PRESC);
+    I2C2 -> TIMINGR |= (0x1U << I2C_TIMINGR_PRESC_Pos);
+
+    // SCL Low Period Initialization (SCLL = 0x13)
+    I2C2 -> TIMINGR &= ~(I2C_TIMINGR_SCLL);
+    I2C2 -> TIMINGR |= (0x13U << I2C_TIMINGR_SCLL_Pos);
+
+    // SCL High Period Initialization (SCLH = 0xF)
+    I2C2 -> TIMINGR &= ~(I2C_TIMINGR_SCLH);
+    I2C2 -> TIMINGR |= (0xFU << I2C_TIMINGR_SCLH_Pos);
+
+    // SCL Delay between SDA edge and SCL rising edge (SDADEL = 0x4)
+    I2C2 -> TIMINGR &= ~(I2C_TIMINGR_SCLDEL);
+    I2C2 -> TIMINGR |= (0x4U << I2C_TIMINGR_SCLDEL_Pos);
+
+    // SDA Delay between SCL falling edge and SDA edge (SDADEL = 0x2)
+    I2C2 -> TIMINGR &= ~(I2C_TIMINGR_SDADEL);
+    I2C2 -> TIMINGR |= (0x2U << I2C_TIMINGR_SDADEL_Pos);
+
+    // Enabling I2C Peripheral
+    I2C2 -> CR1 |= I2C_CR1_PE;
+}
+
+void My_HAL_USART_Init(void) {
+    USART1 -> BRR = HAL_RCC_GetHCLKFreq() / 115200; // Sets the divisor to a divisor for the desired baud rate.
+
+    USART1 -> CR1 |= (USART_CR1_RE | USART_CR1_TE);
+    USART1 -> CR1 |= USART_CR1_UE;
+
+    USART1 -> CR1 |= USART_CR1_RXNEIE;
+}
+
+void My_HAL_TIMER_Init(void) {
+    // For TIM2, 8 MHz divided by 4 Hz to get 2,000,000
+    // Setting prescalar to (32 - 1), where 32 is the actual divisor.
+    TIM2 -> PSC = 31;
+
+    // Setting the auto-reload register divides 2,000,000 by 62500, allowing the prescalar to be 32.
+    TIM2 -> ARR = 62500;
+
+    // For TIM3, 8 MHz divided by 800 Hz to get 10,000
+    // Setting prescalar to (100 - 1), where 100 is the actual divisor.
+    TIM3 -> PSC = 99;
+
+    // Setting the auto-reload register divides 100,000 by 100, allowing the prescalar to be 100.
+    TIM3 -> ARR = 100;
+
+    // Update interrupt enable for timer 2.
+    TIM2 -> DIER |= TIM_DIER_UIE;
+
+    NVIC_EnableIRQ(TIM2_IRQn);
+
+    // Configuring the capture/compare mode register for channels 1 and 2 to an output
+    TIM3 -> CCMR1 &= ~(TIM_CCMR1_CC1S | TIM_CCMR1_CC2S);
+
+    // Configuring OC1M to PWM Mode 2 and OC2M to PWM Mode 1
+    TIM3 -> CCMR1 |= (TIM_CCMR1_OC1M | (TIM_CCMR1_OC2M & ~(TIM_CCMR1_OC2M_0)));
+    assert((TIM3 -> CCMR1 && (TIM_CCMR1_OC1M | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2)) == 0x1);
+
+    // Enabling output compare preload for both channels
+    TIM3 -> CCMR1 |= (TIM_CCMR1_OC1PE | TIM_CCMR1_OC2PE);
+
+    // Enabling capture/compare 1 and 2 output.
+    TIM3 -> CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E);
+
+    // Configuring capture/compare registers to 20% of ARR value.
+    TIM3 -> CCR1 = 20;
+    TIM3 -> CCR2 = 20;
+
+    // Turning on auto-reload preload enabled and update generation turned on
+    TIM3 -> CR1 |= TIM_CR1_ARPE;
+    TIM3 -> EGR |= TIM_EGR_UG;
+
+    // Enable timer
+    TIM2 -> CR1 |= TIM_CR1_CEN;
+    TIM3 -> CR1 |= TIM_CR1_CEN;
+}
+
+void My_HAL_EXTI0_ENABLE(void) {
+    // Enable the EXTI0
+    EXTI -> IMR |= 0x1;
+    // Enabling rising trigger detection
+    EXTI -> RTSR |= 0x1;
+    // Disabling falling trigger detection
+    EXTI -> FTSR &= ~(0x1);
+}
+
+void PA0_EXTI0(void) {
+    SYSCFG -> EXTICR[0] &= ~(0x7);
+}
+
+uint8_t My_HAL_I2C_ReadFromReg(I2C_TypeDef* I2C, uint8_t device_address, char register_address, uint8_t nbytes, char data[]) {
+    // Set-up I2C Transmission
+    I2C_Setup(I2C, device_address, 1, 0);
+
+    I2C -> CR2 |= I2C_CR2_START;
+
+    // Attempt to write the register address to the device
+    I2C_Write(I2C, 1, register_address);
+
+    usart_print("Attempting to send register address\r\n");
+
+    // If transmission couldn't be sent, then return false
+    if (receivedNACK) {
+        I2C -> CR2 |= I2C_CR2_STOP;
+        usart_print("\r\nCannot transmit register address\r\n");
+        return 0;
+    }
+
+    usart_print("Wrote register address to device\r\n");
+
+    I2C_Setup(I2C, device_address, nbytes, 1);
+
+    I2C -> CR2 |= I2C_CR2_START;
+
+    usart_print("Starting to send\r\n");
+
+    I2C_Read(I2C, nbytes, data);
+
+    usart_print("Attempting to read\r\n");
+
+    if (receivedNACK) {
+        I2C -> CR2 |= I2C_CR2_STOP;
+        usart_print("\r\nCannot read the register");
+        return 0;
+    }
+
+    usart_print("Reading complete...\r\n");
+
+    // Stop the transaction
+    I2C -> CR2 |= I2C_CR2_STOP;
+
+    return 1;
+}
+
+void My_HAL_I2C_WriteToReg(I2C_TypeDef* I2C, uint8_t device_address, char register_address, uint8_t nbytes, char data[]) {
+    // Set transmission parameters in CR2 register
+    I2C_Setup(I2C, device_address, 1, 0);
+
+    // Starting the transmission
+    I2C -> CR2 |= I2C_CR2_START;
+
+    // Attempt to register address
+    I2C_Write(I2C, 1, register_address);
+    
+    // Restart the transmission
+    I2C -> CR2 |= I2C_CR2_START;
+
+    // Write the data
+    I2C_Write(I2C, nbytes, data);
+
+    // Stop the transmission
+    I2C -> CR2 |= I2C_CR2_STOP;
+}
+
+static void I2C_Setup(I2C_TypeDef* I2C, uint8_t device_address, uint8_t nbytes, uint8_t rd_wrn) {
+    // Clearing relevant registers
+    I2C -> CR2 &= ~(I2C_CR2_NBYTES | I2C_CR2_SADD | I2C_CR2_RD_WRN);
+    
+    // Setting relevant registers
+    I2C -> CR2 |= (device_address << (I2C_CR2_SADD_Pos + 1));
+    I2C -> CR2 |= (nbytes << I2C_CR2_NBYTES_Pos);
+    I2C -> CR2 |= (rd_wrn << I2C_CR2_RD_WRN_Pos);
+}
+
+static void I2C_Write(I2C_TypeDef* I2C, uint8_t nbytes, char data[]) {
+    
+    uint8_t i = 0;
+
+    while (i < nbytes) {
+        // If NACKF is true, that means the slave device did not acknowledge the transmission.
+        if (I2C -> ISR & I2C_ISR_NACKF) {
+            receivedNACK = 1;
+            usart_print("NACKF is true, writing didn't work\r\n");
+            return;
+        }
+
+        if (!(I2C -> ISR & I2C_ISR_TXIS))
+            continue;
+
+        usart_print("NACKF is false, transmission complete\r\n");
+
+        I2C -> TXDR = data[i];
+        i++;
+    }
+
+    // Wait until the transmission is complete
+    while (!(I2C -> ISR & I2C_ISR_TC)) {
+        // Spin loop
+    }
+}
+
+static void I2C_Read(I2C_TypeDef* I2C, uint8_t nbytes, char data[]) {
+    uint8_t i = 0;
+
+    while (i < nbytes) {
+        // Wait until a new byte is ready to be read or the receiver does not acknowledge
+        if (I2C -> ISR & I2C_ISR_NACKF) {
+            receivedNACK = 1;
+            return;
+        }
+
+        if (!(I2C -> ISR & I2C_ISR_RXNE))
+            continue;
+
+        data[i] = I2C -> RXDR;
+        i++;
+    }
+
+    // Wait until the transaction is completed
+    while (!(I2C -> ISR & I2C_ISR_TC)) {
+        // Spin loop
+    }
+}
