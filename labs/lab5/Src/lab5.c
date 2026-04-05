@@ -10,6 +10,10 @@ volatile uint8_t rx_flag = 0;
 
 void SystemClock_Config(void);
 
+// USART KEY
+// Orange Wire - Orange (TX) to PA10 (RX)
+// Yellow Wire - Yellow (RX) to PA9 (TX)
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -38,8 +42,7 @@ char HexToChar(uint8_t hexadecimal) {
   }
 }
 
-int main(void)
-{
+int main(void) {
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
   /* Configure the system clock */
@@ -78,10 +81,18 @@ int main(void)
     GPIO_SPEED_FREQ_LOW
   };  
 
+  GPIO_InitTypeDef LEDs_config = {
+    GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
+    GPIO_MODE_OUTPUT_PP,
+    GPIO_NOPULL,
+    GPIO_SPEED_FREQ_LOW
+  };
+
   My_HAL_GPIO_Init(GPIOA, &USARTconfig);
   My_HAL_GPIO_Init(GPIOB, &I2Cconfig);
   My_HAL_GPIO_Init(GPIOB, &B_outs);
   My_HAL_GPIO_Init(GPIOC, &C_outs);
+  My_HAL_GPIO_Init(GPIOC, &LEDs_config);
 
   // Sets USART as alternate function
   GPIOA -> AFR[1] |= ((1 << GPIO_AFRH_AFSEL9_Pos) | (1 << GPIO_AFRH_AFSEL10_Pos));
@@ -100,93 +111,168 @@ int main(void)
 
   uint8_t GYROSCOPE_ADDR = 0x69;
   uint8_t WHO_AM_I_ADDR = 0x0F;
-  uint8_t CONTROL_ADDR = 0x20;
-  char data[1];
+  uint8_t CR1_ADDR = 0x20;
+  uint8_t FIFO_CR_ADDR = 0x2E;
+
+  uint8_t OUT_XL_ADDR = 0x28;
+  uint8_t OUT_XH_ADDR = 0x29;
+  uint8_t OUT_YL_ADDR = 0x2A;
+  uint8_t OUT_YH_ADDR = 0x2B;
+
+  uint8_t X_HL_ADDR = 0xA8;
+  uint8_t Y_HL_ADDR = 0xAA;
+
+  uint8_t data[10];
+  char X_number[10];
+  char Y_number[10];
+  char number[10];
 
   char hexString[10];
 
-  while(1) {
-    usart_print("Starting writing transaction...\r\n");
-
-    // Set up writing transaction
-    I2C2 -> CR2 &= ~(1 << 10);
-    I2C2 -> CR2 |= (GYROSCOPE_ADDR << 1) | (1 << 16) | (1 << 13);
-
-    usart_print("Waiting for flag to be set...\r\n");
-
-    while (!(I2C2 -> ISR & I2C_ISR_TXIS) && !(I2C2 -> ISR & I2C_ISR_NACKF)) {
-      // waits until one of these flags are set
-    }
-
-    if (I2C2 -> ISR & I2C_ISR_NACKF) {
-      usart_print("NACKF is true, transmit doesn't work\r\n");
-      break; 
-    }
-
-    usart_print ("Transmitting WHO_AM_I address to GYROSCOPE.\r\n");
-
-    I2C2 -> TXDR = WHO_AM_I_ADDR;
-
-    usart_print("Waiting for transfer flag to complete...\r\n");
-
-    while (!(I2C2 -> ISR & I2C_ISR_TC)) {
-      // waits until transfer complete flag is set
-    }
-
-    usart_print("Starting reading transaction...\r\n");
-
-    // Set up reading transaction
-    I2C2 -> CR2 = (GYROSCOPE_ADDR << 1) | (0x1 << 16) | (0x1 << 10) | (0x1 << 13);
-
-    usart_print("Waiting for flag to be set...\r\n");
-
-    while (!(I2C2 -> ISR & I2C_ISR_RXNE) && !(I2C2 -> ISR & I2C_ISR_NACKF)) {
-      // waits until one of these flags are set
-    }
-
-    if (I2C2 -> ISR & I2C_ISR_NACKF) {
-      usart_print("NACKF is true, transmit doesn't work\r\n");
-      break; 
-    }
-
-    usart_print("Waiting for transfer flag to complete...\r\n");
-
-    while (!(I2C2 -> ISR & I2C_ISR_TC)) {
-      // waits until transfer complete flag is set
-    }
-
-    usart_print ("Reading WHO_AM_I register.\r\n");
-
-    data[0] = I2C2 -> RXDR; 
-
-    if (I2C2 -> RXDR == 0xD3) {
-      usart_print ("The WHO AM I register is: 0x");
-      usart_transmit(HexToChar(data[0]));
-      usart_transmit(HexToChar(data[0] >> 4));
-      usart_print("\r\n");
-    }
-
-    I2C2 -> CR2 |= (1 << 14);
-
-    HAL_Delay(1000);
-  }
-
-  /* My_HAL_I2C_WriteToReg(I2C2, GYROSCOPE_ADDR, CONTROL_ADDR, 1, (0x1 | (0x1 << 1) | (0x1 << 3)));
+  uint8_t CR1_CONFIG = 0x0B;
+  uint8_t FIFO_CONFIG = 0x20;
   
-  usart_print("Turned on Gyroscope.\r\n");
+  My_HAL_I2C_WriteToReg(I2C2, GYROSCOPE_ADDR, CR1_ADDR, 1, CR1_CONFIG);
 
-  while (1) {
-    My_HAL_I2C_ReadFromReg(I2C2, GYROSCOPE_ADDR, WHO_AM_I_ADDR, 1, data);
+  usart_print("Gyroscope Enabled\r\n");
 
-    usart_print("Reading WHO AM I register: ");
-    usart_print("0x");
-    usart_print(data);
-    //usart_transmit(HexToChar(data[0] & 0x0F));
-    //usart_transmit(HexToChar((data[0] >> 4) & 0x0F));
+  HAL_Delay(5000);
+
+  My_HAL_I2C_WriteToReg(I2C2, GYROSCOPE_ADDR, FIFO_CR_ADDR, 1, FIFO_CONFIG);
+
+  usart_print("FIFO Mode Enabled\r\n");
+
+  HAL_Delay(5000);
+
+  while(1) {
+     
+    // Lab Exercise 5.1 
+
+    // My_HAL_I2C_ReadFromReg(I2C2, GYROSCOPE_ADDR, WHO_AM_I_ADDR, 1, data);
+
+    // if (I2C2 -> RXDR == 0xD3) {
+    //   usart_print ("The WHO AM I register is: 0x");
+    //   usart_transmit(HexToChar(data[0] >> 4));
+    //   usart_transmit(HexToChar(data[0]));
+    //   usart_print("\r\n");
+    // }
+
+    // I2C2 -> CR2 |= (I2C_CR2_STOP);
+
+    // Lab Exercise 5.2
+
+    // My_HAL_I2C_ReadFromReg(I2C2, GYROSCOPE_ADDR, OUT_XL_ADDR, 4, data);
+
+    I2C2->CR2 &= ~((0xFF << 16) | (0x7FF << 0));
+    I2C2->CR2 |= ((1 << 16) | (0x69 << 1));
+    I2C2->CR2 |= I2C_CR2_START;
+
+    //verify no NACK and wait for TXIS
+    while(!(I2C2->ISR & (I2C_ISR_TXIS | I2C_ISR_NACKF)));
+    I2C2->TXDR = 0xA8;
+
+    //wait for transfer complete
+    while(!(I2C2->ISR & I2C_ISR_TC));
+
+    //read 4 bytes of data for X and Y axes using auto-increment
+    I2C2->CR2 &= ~((0xFF << 16) | (0x7FF << 0));
+    I2C2->CR2 |= ((4 << 16) | (0x69 << 1) | I2C_CR2_RD_WRN);
+    I2C2->CR2 |= I2C_CR2_START;
+
+    //read 4 bytes OUT_X_L, OUT_X_H, OUT_Y_L, OUT_Y_H 
+    uint8_t xl, xh, yl, yh;
+    while(!(I2C2->ISR & I2C_ISR_RXNE));
+    xl = I2C2->RXDR;
+    
+    while(!(I2C2->ISR & I2C_ISR_RXNE));
+    xh = I2C2->RXDR;
+    
+    while(!(I2C2->ISR & I2C_ISR_RXNE));
+    yl = I2C2->RXDR;
+
+    while(!(I2C2->ISR & I2C_ISR_RXNE));
+    yh = I2C2->RXDR;
+
+    //wait for transfer complete
+    while(!(I2C2->ISR & I2C_ISR_TC));
+    I2C2->CR2 |= I2C_CR2_STOP;
+
+    //wait for stop to complete
+    while(!(I2C2->ISR & I2C_ISR_STOPF));
+    I2C2->CR2 |= I2C_ICR_STOPCF;
+
+    int16_t x = (int16_t)((xh << 8) | xl);
+    int16_t y = (int16_t)((yh << 8) | yl);
+
+    // My_HAL_I2C_ReadFromReg(I2C2, GYROSCOPE_ADDR, OUT_XL_ADDR, 1, data);
+
+    // uint8_t xlow = data[0];
+
+    // I2C2 -> CR2 |= (I2C_CR2_STOP);
+
+    // My_HAL_I2C_ReadFromReg(I2C2, GYROSCOPE_ADDR, OUT_YH_ADDR, 1, data);
+
+    // uint8_t yhigh = data[0];
+
+    // I2C2 -> CR2 |= (I2C_CR2_STOP);
+
+    // My_HAL_I2C_ReadFromReg(I2C2, GYROSCOPE_ADDR, OUT_YL_ADDR, 1, data);
+
+    // uint8_t ylow = data[0];
+
+    // I2C2 -> CR2 |= (I2C_CR2_STOP);
+
+    // usart_print("Reading y-raw\r\n");
+
+    // My_HAL_I2C_ReadFromReg(I2C2, GYROSCOPE_ADDR, Y_HL_ADDR, 2, data);
+
+    // uint8_t yhigh = data[0];
+    // uint8_t ylow = data[1];
+
+    // I2C2 -> CR2 |= (I2C_CR2_STOP);
+
+    // int16_t xValue = (xhigh << 8 | xlow);
+    // int16_t yValue = (yhigh << 8 | ylow);
+
+    snprintf(X_number, sizeof(X_number), "%d", x);
+    usart_print("X-value: ");
+    usart_print(X_number);
     usart_print("\r\n");
 
-    HAL_Delay(500);
-  } */
+    snprintf(Y_number, sizeof(Y_number), "%d", y);
+    usart_print("Y-value: ");
+    usart_print(Y_number);
+    usart_print("\r\n");
+
+    if(x > 1000) {
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); // Set Green
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET); // Reset Orange
+    }
+    else if(x < -1000) {
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);   // set orange
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET); // reset green
+    }
+    else {
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET); // reset orange
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET); // reset green
+    }
+
+    if(y > 1000) {
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Set red
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET); // Reset blue
+    }
+    else if(y < -1000) {
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);   // set blue
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET); // reset red
+    }
+    else {
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET); // reset red
+      My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET); // reset blue
+    }
+
+    HAL_Delay(100);
+  }
+
   return -1;
 }
 

@@ -13,5 +13,5 @@ void My_HAL_TIMER_Init(void);
 void My_HAL_EXTI0_ENABLE(void);
 void PA0_EXTI0(void);
 
-void My_HAL_I2C_WriteToReg(I2C_TypeDef* I2C, uint8_t device_address, char register_address, uint8_t nbytes, char data[]);
-uint8_t My_HAL_I2C_ReadFromReg(I2C_TypeDef* I2C, uint8_t device_address, char register_address, uint8_t nbytes, char data[]);
+void My_HAL_I2C_WriteToReg(I2C_TypeDef* I2C, uint8_t device_address, uint8_t register_address, uint8_t nbytes, uint8_t data);
+uint8_t My_HAL_I2C_ReadFromReg(I2C_TypeDef* I2C, uint8_t device_address, uint8_t register_address, uint8_t nbytes, uint8_t data[]);

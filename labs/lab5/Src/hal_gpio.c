@@ -244,68 +244,104 @@ void PA0_EXTI0(void) {
     SYSCFG -> EXTICR[0] &= ~(0x7);
 }
 
-uint8_t My_HAL_I2C_ReadFromReg(I2C_TypeDef* I2C, uint8_t device_address, char register_address, uint8_t nbytes, char data[]) {
-    // Set-up I2C Transmission
-    I2C_Setup(I2C, device_address, 1, 0);
+uint8_t My_HAL_I2C_ReadFromReg(I2C_TypeDef* I2C, uint8_t device_address, uint8_t register_address, uint8_t nbytes, uint8_t data[]) {
+    clear_flags(I2C);
+    
+    usart_print("Starting writing transaction...\r\n");
 
-    I2C -> CR2 |= I2C_CR2_START;
+    // Set up writing transaction
+    I2C -> CR2 &= ~(I2C_CR2_RD_WRN | (0xFFU << I2C_CR2_NBYTES_Pos) | (0x3FFU << 0));
+    I2C -> CR2 |= (device_address << 1) | (1 << I2C_CR2_NBYTES_Pos);
+    I2C -> CR2 |= (I2C_CR2_START);
 
-    // Attempt to write the register address to the device
-    I2C_Write(I2C, 1, register_address);
+    usart_print("Waiting for flag to be set...\r\n");
 
-    usart_print("Attempting to send register address\r\n");
+    while(!(I2C2->ISR & (I2C_ISR_TXIS | I2C_ISR_NACKF)));
+    
+    I2C -> TXDR = register_address;
 
-    // If transmission couldn't be sent, then return false
-    if (receivedNACK) {
-        I2C -> CR2 |= I2C_CR2_STOP;
-        usart_print("\r\nCannot transmit register address\r\n");
-        return 0;
+    while (!(I2C -> ISR & I2C_ISR_TC)) {
+      // waits until transfer complete flag is set
     }
 
-    usart_print("Wrote register address to device\r\n");
+    usart_print("Starting reading transaction...\r\n");
 
-    I2C_Setup(I2C, device_address, nbytes, 1);
+    // Set up reading transaction
+    I2C -> CR2 &= ~(I2C_CR2_RD_WRN | (0xFFU << I2C_CR2_NBYTES_Pos) | (0x3FFU << 0));
+    I2C -> CR2 |= (device_address << 1) | (nbytes << I2C_CR2_NBYTES_Pos) | (I2C_CR2_RD_WRN);
+    I2C -> CR2 |= (I2C_CR2_START);
 
-    I2C -> CR2 |= I2C_CR2_START;
+    // usart_print("Waiting for flag to be set...\r\n");
 
-    usart_print("Starting to send\r\n");
+    // usart_print("Waiting for transfer flag to complete...\r\n");
 
-    I2C_Read(I2C, nbytes, data);
+    // usart_print ("Reading device register.\r\n");
 
-    usart_print("Attempting to read\r\n");
-
-    if (receivedNACK) {
-        I2C -> CR2 |= I2C_CR2_STOP;
-        usart_print("\r\nCannot read the register");
-        return 0;
-    }
-
-    usart_print("Reading complete...\r\n");
-
-    // Stop the transaction
-    I2C -> CR2 |= I2C_CR2_STOP;
-
+    for(uint8_t i = 0; i < nbytes; i++) {
+        while(!(I2C -> ISR & I2C_ISR_RXNE));
+        data[i] = I2C -> RXDR;  // Read byte
+    }    
     return 1;
 }
 
-void My_HAL_I2C_WriteToReg(I2C_TypeDef* I2C, uint8_t device_address, char register_address, uint8_t nbytes, char data[]) {
+void My_HAL_I2C_WriteToReg(I2C_TypeDef* I2C, uint8_t device_address, uint8_t register_address, uint8_t nbytes, uint8_t data) {
+    clear_flags(I2C);
+
     // Set transmission parameters in CR2 register
-    I2C_Setup(I2C, device_address, 1, 0);
+    // Set up writing transaction
+    I2C -> CR2 &= ~(I2C_CR2_RD_WRN | (0xFFU << I2C_CR2_NBYTES_Pos) | (0xFFU << 1));
+    I2C -> CR2 |= (device_address << 1) | (2 << I2C_CR2_NBYTES_Pos) | I2C_CR2_START;
 
-    // Starting the transmission
-    I2C -> CR2 |= I2C_CR2_START;
+    usart_print("Waiting for flag to be set...\r\n");
 
-    // Attempt to register address
-    I2C_Write(I2C, 1, register_address);
+    while (!(I2C -> ISR & I2C_ISR_TXIS) && !(I2C -> ISR & I2C_ISR_NACKF)) {
+      // waits until one of these flags are set
+    }
+
+    if (I2C -> ISR & I2C_ISR_NACKF) {
+      usart_print("NACKF is true, transmit doesn't work\r\n");
+    }
+
+    usart_print ("Transmitting register address to device address.\r\n");
+
+    I2C -> TXDR = register_address;
     
-    // Restart the transmission
-    I2C -> CR2 |= I2C_CR2_START;
+    usart_print("Restarting transmission...\r\n");
 
-    // Write the data
-    I2C_Write(I2C, nbytes, data);
+    while (!(I2C -> ISR & I2C_ISR_TXIS) && !(I2C -> ISR & I2C_ISR_NACKF)) {
+        // waits until one of these flags are set
+    }
+
+    if (I2C -> ISR & I2C_ISR_NACKF) {
+        usart_print("NACKF is true, transmit doesn't work\r\n");
+    }
+
+    I2C -> TXDR = data;
+
+    usart_print("Transmitting data... \r\n");
+
+    usart_print("Transmission complete... \r\n");
 
     // Stop the transmission
     I2C -> CR2 |= I2C_CR2_STOP;
+}
+
+void clear_flags(I2C_TypeDef* I2C) {
+  if(I2C -> ISR & I2C_ISR_NACKF) {
+    I2C2 -> ICR = I2C_ICR_NACKCF;
+  }
+  if(I2C -> ISR & I2C_ISR_STOPF) {
+    I2C -> ICR = I2C_ICR_STOPCF;
+  }
+  if(I2C -> ISR & I2C_ISR_BERR) {
+    I2C -> ICR = I2C_ICR_BERRCF;
+  }
+  if(I2C -> ISR & I2C_ISR_ARLO) {
+    I2C -> ICR = I2C_ICR_ARLOCF;
+  }
+  if(I2C -> ISR & I2C_ISR_OVR) {
+    I2C -> ICR = I2C_ICR_OVRCF;
+  }
 }
 
 static void I2C_Setup(I2C_TypeDef* I2C, uint8_t device_address, uint8_t nbytes, uint8_t rd_wrn) {
