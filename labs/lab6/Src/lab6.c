@@ -3,22 +3,54 @@
 
 void SystemClock_Config(void);
 
+// Sine Wave: 8-bit, 32 samples/cycle
+const uint8_t sine_table[32] = {127,151,175,197,216,232,244,251,254,251,244,
+232,216,197,175,151,127,102,78,56,37,21,9,2,0,2,9,21,37,56,78,102};
+
+// Triangle Wave: 8-bit, 32 samples/cycle
+const uint8_t triangle_table[32] = {0,15,31,47,63,79,95,111,127,142,158,174,
+190,206,222,238,254,238,222,206,190,174,158,142,127,111,95,79,63,47,31,15};
+
+// Sawtooth Wave: 8-bit, 32 samples/cycle
+const uint8_t sawtooth_table[32] = {0,7,15,23,31,39,47,55,63,71,79,87,95,103,
+111,119,127,134,142,150,158,166,174,182,190,198,206,214,222,230,238,246};
+
+// Square Wave: 8-bit, 32 samples/cycle
+const uint8_t square_table[32] = {254,254,254,254,254,254,254,254,254,254,
+254,254,254,254,254,254,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
 /**
   * @brief  The application entry point.
   * @retval int
-  */
-int main(void)
-{
+*/
+
+int main(void) {
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
+  
+  // Peripheral Clocks Enabled
+  HAL_RCC_GPIO_CLK_ENABLE();
 
-  while (1)
-  {
+  GPIO_InitTypeDef LEDs_config = {
+    GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
+    GPIO_MODE_OUTPUT_PP,
+    GPIO_NOPULL,
+    GPIO_SPEED_FREQ_LOW
+  };
+
+  My_HAL_GPIO_Init(GPIOC, &LEDs_config);
+
+  while (1) {
  
   }
+
   return -1;
+}
+
+void HAL_RCC_GPIO_CLK_ENABLE(void) {
+  RCC -> AHBENR |= (RCC_AHBENR_GPIOCEN);
 }
 
 /**
