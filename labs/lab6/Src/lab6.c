@@ -40,7 +40,15 @@ int main(void) {
     GPIO_SPEED_FREQ_LOW
   };
 
+  GPIO_InitTypeDef ANA_config = {
+    GPIO_PIN_1,
+    GPIO_MODE_ANALOG,
+    GPIO_NOPULL,
+    GPIO_SPEED_FREQ_LOW
+  };
+
   My_HAL_GPIO_Init(GPIOC, &LEDs_config);
+  My_HAL_GPIO_Init(GPIOA, &ANA_config);
 
   while (1) {
  
@@ -50,7 +58,7 @@ int main(void) {
 }
 
 void HAL_RCC_GPIO_CLK_ENABLE(void) {
-  RCC -> AHBENR |= (RCC_AHBENR_GPIOCEN);
+  RCC -> AHBENR |= (RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOCEN);
 }
 
 /**
